@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
       await prisma.timePurchase.create({
         data: {
           customerId,
+          duration,
           remainingTime: timeInSeconds,
           expiresAt,
           sessionId: session.id,
