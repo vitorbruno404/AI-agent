@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { PrismaClient } from '@prisma/client';
 
+// Check environment variables at startup
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('STRIPE_SECRET_KEY is not defined in environment variables');
 }
@@ -26,11 +27,14 @@ export async function POST(request: Request) {
     );
   }
 
+  // TypeScript will know STRIPE_WEBHOOK_SECRET is defined because of the check at startup
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
+
   try {
     const event = stripe.webhooks.constructEvent(
       payload,
       sig,
-      process.env.STRIPE_WEBHOOK_SECRET
+      webhookSecret
     );
 
     if (event.type === 'checkout.session.completed') {
