@@ -3,19 +3,19 @@ import { headers } from 'next/headers';
 import Stripe from 'stripe';
 import { PrismaClient } from '@prisma/client';
 
-// Check environment variables at startup
+const prisma = new PrismaClient();
+
 if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not defined in environment variables');
+  throw new Error('STRIPE_SECRET_KEY is not defined');
 }
 
 if (!process.env.STRIPE_WEBHOOK_SECRET) {
-  throw new Error('STRIPE_WEBHOOK_SECRET is not defined in environment variables');
+  throw new Error('STRIPE_WEBHOOK_SECRET is not defined');
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2025-01-27.acacia',
 });
-const prisma = new PrismaClient();
 
 const DURATION_TO_SECONDS = {
   10: 600,   // 10 minutes in seconds
@@ -23,22 +23,18 @@ const DURATION_TO_SECONDS = {
   60: 3600   // 60 minutes in seconds
 };
 
-// Use the new route segment config
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 export async function POST(request: NextRequest) {
-  const body = await request.text();
-  const signature = headers().get('stripe-signature');
-
-  if (!signature) {
-    return NextResponse.json(
-      { error: 'Missing stripe-signature header' },
-      { status: 400 }
-    );
-  }
-
   try {
+    const body = await request.text();
+    const signature = headers().get('stripe-signature');
+
+    if (!signature) {
+      return NextResponse.json(
+        { error: 'Missing stripe-signature header' },
+        { status: 400 }
+      );
+    }
+
     const event = stripe.webhooks.constructEvent(
       body,
       signature,
@@ -89,10 +85,4 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
   }
-}
-
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-}; 
+} 
