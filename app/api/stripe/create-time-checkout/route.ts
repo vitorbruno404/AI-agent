@@ -11,12 +11,11 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2025-01-27.acacia',
 });
 
-// Log all environment variables (except secret key)
-console.log('Environment Variables Check:', {
-  STRIPE_10MIN_PRICE_ID: process.env.STRIPE_10MIN_PRICE_ID,
-  STRIPE_30MIN_PRICE_ID: process.env.STRIPE_30MIN_PRICE_ID,
-  STRIPE_60MIN_PRICE_ID: process.env.STRIPE_60MIN_PRICE_ID,
-  NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL
+// Debug log to see what price IDs we have
+console.log('Available Price IDs:', {
+  '10min': process.env.STRIPE_10MIN_PRICE_ID,
+  '30min': process.env.STRIPE_30MIN_PRICE_ID,
+  '60min': process.env.STRIPE_60MIN_PRICE_ID
 });
 
 const TIME_PRODUCTS = {
@@ -37,7 +36,13 @@ const TIME_PRODUCTS = {
 export async function POST(request: NextRequest) {
   try {
     const { duration, customerId } = await request.json();
-    console.log('Request received:', { duration, customerId });
+    
+    // Debug log
+    console.log('Processing request for:', {
+      duration,
+      customerId,
+      availablePriceId: TIME_PRODUCTS[duration as keyof typeof TIME_PRODUCTS]?.priceId
+    });
 
     // Validate duration
     if (!TIME_PRODUCTS[duration as keyof typeof TIME_PRODUCTS]) {
@@ -52,7 +57,7 @@ export async function POST(request: NextRequest) {
     console.log('Attempting to use price ID:', priceId);
     
     if (!priceId) {
-      console.log('Price ID is undefined for duration:', duration);
+      console.error('Price ID is missing for duration:', duration);
       return NextResponse.json(
         { error: `Price ID not configured for ${duration} minutes` },
         { status: 400 }
@@ -61,20 +66,20 @@ export async function POST(request: NextRequest) {
 
     // Verify the price exists in Stripe
     try {
-      console.log('Retrieving price from Stripe:', priceId);
+      console.log('Attempting to retrieve price:', priceId);
       const price = await stripe.prices.retrieve(priceId);
-      console.log('Price retrieved successfully:', {
+      console.log('Successfully retrieved price:', {
         id: price.id,
         active: price.active,
-        currency: price.currency,
-        unit_amount: price.unit_amount
+        product: price.product
       });
     } catch (error) {
-      console.error('Error retrieving price from Stripe:', error);
+      console.error('Failed to retrieve price from Stripe:', error);
       return NextResponse.json(
         { 
           error: `Invalid price ID for ${duration} minutes`,
-          details: error instanceof Error ? error.message : 'Unknown error'
+          details: error instanceof Error ? error.message : 'Unknown error',
+          priceId: priceId // Include the price ID in the error for debugging
         },
         { status: 400 }
       );
@@ -105,7 +110,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ url: session.url });
   } catch (error) {
-    console.error('Stripe error:', error);
+    console.error('Checkout session creation failed:', error);
     return NextResponse.json(
       { 
         error: 'Error creating checkout session', 
