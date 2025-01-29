@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: '2025-01-27.acacia',
-  });
+// Add error handling for missing API key
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('STRIPE_SECRET_KEY is not defined in environment variables');
+}
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: '2025-01-27.acacia',
+});
 
 const TIME_PRODUCTS = {
   10: {
@@ -21,6 +26,14 @@ const TIME_PRODUCTS = {
 };
 
 export async function POST(request: Request) {
+  // Add validation for required environment variables
+  if (!process.env.NEXT_PUBLIC_BASE_URL) {
+    return NextResponse.json(
+      { error: 'Server configuration error' },
+      { status: 500 }
+    );
+  }
+
   try {
     const { duration, customerId } = await request.json();
 
@@ -28,12 +41,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid duration' }, { status: 400 });
     }
 
+    // Validate price ID exists
+    const priceId = TIME_PRODUCTS[duration as keyof typeof TIME_PRODUCTS].priceId;
+    if (!priceId) {
+      return NextResponse.json(
+        { error: `Price ID not configured for ${duration} minutes` },
+        { status: 500 }
+      );
+    }
+
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
       line_items: [
         {
-          price: TIME_PRODUCTS[duration as keyof typeof TIME_PRODUCTS].priceId,
+          price: priceId,
           quantity: 1,
         },
       ],
