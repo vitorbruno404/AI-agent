@@ -23,6 +23,10 @@ const DURATION_TO_SECONDS = {
   60: 3600   // 60 minutes in seconds
 };
 
+// Use the new route segment config
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   const body = await request.text();
   const signature = headers().get('stripe-signature');
