@@ -15,6 +15,18 @@ interface SimliAgentProps {
 // Get your Simli API key from https://app.simli.com/
 const SIMLI_API_KEY = process.env.NEXT_PUBLIC_SIMLI_API_KEY;
 
+interface TimeOption {
+  duration: number; // in minutes
+  price: number;
+  label: string;
+}
+
+const timeOptions: TimeOption[] = [
+  { duration: 10, price: 15, label: '10 minutes' },
+  { duration: 30, price: 25, label: '30 minutes' },
+  { duration: 60, price: 45, label: '1 hour' }
+];
+
 const SimliAgent: React.FC<SimliAgentProps> = ({ onStart, onClose, customerId }) => {
   // State management
   const [isLoading, setIsLoading] = useState(false);
@@ -25,7 +37,7 @@ const SimliAgent: React.FC<SimliAgentProps> = ({ onStart, onClose, customerId })
   const myCallObjRef = useRef<DailyCall | null>(null);
   const [chatbotId, setChatbotId] = useState<string | null>(null);
 
-  const { hasActiveSubscription } = useSubscription(customerId);
+  const { hasActiveTime, formattedTimeRemaining, isLoading: isSubscriptionLoading } = useSubscription(customerId);
 
   /**
    * Create a new Simli room and join it using Daily
@@ -133,22 +145,74 @@ const SimliAgent: React.FC<SimliAgentProps> = ({ onStart, onClose, customerId })
     }
   };
 
+  const handlePurchaseTime = async (duration: number) => {
+    // Implement the logic to handle time purchase
+    console.log(`Purchasing ${duration} minutes`);
+  };
+
   return (
     <>
       {isAvatarVisible && (
-        <div className="h-[350px] w-[350px]">
+        <>
           <div className="h-[350px] w-[350px]">
-            <DailyProvider callObject={callObject}>
-              {chatbotId && <VideoBox key={chatbotId} id={chatbotId} />}
-            </DailyProvider>
+            <div className="h-[350px] w-[350px]">
+              <DailyProvider callObject={callObject}>
+                {chatbotId && <VideoBox key={chatbotId} id={chatbotId} />}
+              </DailyProvider>
+            </div>
           </div>
-        </div>
+          <div className="absolute top-2 right-2 bg-black bg-opacity-50 px-3 py-1 rounded-full">
+            <span className="text-white font-abc-repro-mono">
+              {formattedTimeRemaining}
+            </span>
+          </div>
+        </>
       )}
       <div className="flex flex-col items-center">
+        {!isAvatarVisible && (
+          <div className="w-full space-y-4">
+            {!hasActiveTime ? (
+              timeOptions.map((option) => (
+                <button
+                  key={option.duration}
+                  onClick={() => handlePurchaseTime(option.duration)}
+                  className={cn(
+                    "w-full h-[52px] bg-simliblue text-white py-3 px-6 rounded-[100px] transition-all duration-300 hover:text-black hover:bg-white hover:rounded-sm",
+                    "flex justify-between items-center"
+                  )}
+                >
+                  <span className="font-abc-repro-mono font-bold">
+                    {option.label}
+                  </span>
+                  <span className="font-abc-repro-mono">
+                    ${option.price}
+                  </span>
+                </button>
+              ))
+            ) : (
+              <button
+                onClick={handleJoinRoom}
+                disabled={isLoading}
+                className={cn(
+                  "w-full h-[52px] bg-simliblue text-white py-3 px-6 rounded-[100px] transition-all duration-300 hover:text-black hover:bg-white hover:rounded-sm",
+                  "flex justify-center items-center"
+                )}
+              >
+                {isLoading ? (
+                  <IconSparkleLoader className="h-[20px] animate-loader" />
+                ) : (
+                  <span className="font-abc-repro-mono font-bold">
+                    Start Interaction ({formattedTimeRemaining} remaining)
+                  </span>
+                )}
+              </button>
+            )}
+          </div>
+        )}
         {!isAvatarVisible ? (
           <button
             onClick={handleJoinRoom}
-            disabled={isLoading || !hasActiveSubscription || isLoading}
+            disabled={isLoading || !hasActiveTime || isLoading}
             className={cn(
               "w-full h-[52px] mt-4 disabled:bg-[#343434] disabled:text-white disabled:hover:rounded-[100px] bg-simliblue text-white py-3 px-6 rounded-[100px] transition-all duration-300 hover:text-black hover:bg-white hover:rounded-sm",
               "flex justify-center items-center"
@@ -156,7 +220,7 @@ const SimliAgent: React.FC<SimliAgentProps> = ({ onStart, onClose, customerId })
           >
             {isLoading ? (
               <IconSparkleLoader className="h-[20px] animate-loader" />
-            ) : !hasActiveSubscription ? (
+            ) : !hasActiveTime ? (
               <span className="font-abc-repro-mono font-bold w-[164px]">
                 Subscribe to Start
               </span>
