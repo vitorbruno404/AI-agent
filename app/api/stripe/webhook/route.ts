@@ -5,8 +5,8 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY as string;
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
 
 if (!stripeSecretKey) {
   throw new Error('STRIPE_SECRET_KEY is not defined');
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     const event = stripe.webhooks.constructEvent(
       body,
       signature,
-      webhookSecret // Using the validated webhook secret
+      webhookSecret
     );
 
     if (event.type === 'checkout.session.completed') {
