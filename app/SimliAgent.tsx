@@ -31,6 +31,7 @@ const SimliAgent: React.FC<SimliAgentProps> = ({ onStart, onClose, customerId })
   // State management
   const [isLoading, setIsLoading] = useState(false);
   const [isAvatarVisible, setIsAvatarVisible] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   const [tempRoomUrl, setTempRoomUrl] = useState<string>("");
   const callObject = useRef<DailyCall | null>(null);
@@ -150,7 +151,13 @@ const SimliAgent: React.FC<SimliAgentProps> = ({ onStart, onClose, customerId })
   };
 
   const handlePurchaseTime = async (duration: number) => {
+    setIsLoading(true);
+    setCheckoutError(null);
+    
     try {
+      console.log('Starting checkout process for duration:', duration);
+      console.log('Customer ID:', customerId);
+
       const response = await fetch('/api/stripe/create-time-checkout', {
         method: 'POST',
         headers: {
@@ -158,19 +165,28 @@ const SimliAgent: React.FC<SimliAgentProps> = ({ onStart, onClose, customerId })
         },
         body: JSON.stringify({
           duration,
-          customerId: customerId || undefined,
+          customerId,
         }),
       });
 
+      console.log('Checkout response status:', response.status);
       const data = await response.json();
+      console.log('Checkout response data:', data);
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create checkout session');
+      }
 
       if (data.url) {
         window.location.href = data.url;
       } else {
-        console.error('No checkout URL received');
+        throw new Error('No checkout URL received');
       }
     } catch (error) {
-      console.error('Error creating checkout session:', error);
+      console.error('Error in handlePurchaseTime:', error);
+      setCheckoutError(error instanceof Error ? error.message : 'Failed to start checkout process');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -194,18 +210,26 @@ const SimliAgent: React.FC<SimliAgentProps> = ({ onStart, onClose, customerId })
       <div className="flex flex-col items-center">
         {!isAvatarVisible && (
           <div className="w-full space-y-4">
+            {checkoutError && (
+              <div className="text-red-500 text-center mb-4">
+                {checkoutError}
+              </div>
+            )}
+            
             {!hasActiveTime ? (
               timeOptions.map((option) => (
                 <button
                   key={option.duration}
                   onClick={() => handlePurchaseTime(option.duration)}
+                  disabled={isLoading}
                   className={cn(
                     "w-full h-[52px] bg-simliblue text-white py-3 px-6 rounded-[100px] transition-all duration-300 hover:text-black hover:bg-white hover:rounded-sm",
-                    "flex justify-between items-center"
+                    "flex justify-between items-center",
+                    isLoading && "opacity-50 cursor-not-allowed"
                   )}
                 >
                   <span className="font-abc-repro-mono font-bold">
-                    {option.label}
+                    {isLoading ? 'Loading...' : option.label}
                   </span>
                   <span className="font-abc-repro-mono">
                     ${option.price}
