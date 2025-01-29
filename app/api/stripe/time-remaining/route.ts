@@ -1,11 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const customerId = searchParams.get('customerId');
+export const dynamic = 'force-dynamic';
+
+export async function GET(request: NextRequest) {
+  const customerId = request.nextUrl.searchParams.get('customerId');
 
   if (!customerId) {
     return NextResponse.json({ error: 'Customer ID is required' }, { status: 400 });

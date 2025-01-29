@@ -1,28 +1,39 @@
 'use client';
-import { useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
 
-export default function SuccessPage() {
+function SuccessContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const sessionId = searchParams.get('session_id');
 
   useEffect(() => {
+    const sessionId = new URLSearchParams(window.location.search).get('session_id');
+    
     if (sessionId) {
-      // Verify the session if needed
       setTimeout(() => {
         router.push('/');
       }, 5000);
     }
-  }, [sessionId, router]);
+  }, [router]);
 
   return (
+    <div className="text-center text-white">
+      <h1 className="text-2xl font-bold mb-4">Payment Successful!</h1>
+      <p className="mb-4">Your time has been added to your account.</p>
+      <p>Redirecting you back to the chat...</p>
+    </div>
+  );
+}
+
+export default function SuccessPage() {
+  return (
     <div className="min-h-screen bg-black flex items-center justify-center">
-      <div className="text-center text-white">
-        <h1 className="text-2xl font-bold mb-4">Payment Successful!</h1>
-        <p className="mb-4">Your time has been added to your account.</p>
-        <p>Redirecting you back to the chat...</p>
-      </div>
+      <Suspense fallback={
+        <div className="text-white">
+          Loading...
+        </div>
+      }>
+        <SuccessContent />
+      </Suspense>
     </div>
   );
 } 

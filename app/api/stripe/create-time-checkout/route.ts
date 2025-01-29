@@ -1,5 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+
+export const dynamic = 'force-dynamic';
 
 // Add error handling for missing API key
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -25,8 +27,7 @@ const TIME_PRODUCTS = {
   },
 };
 
-export async function POST(request: Request) {
-  // Add validation for required environment variables
+export async function POST(request: NextRequest) {
   if (!process.env.NEXT_PUBLIC_BASE_URL) {
     return NextResponse.json(
       { error: 'Server configuration error' },
@@ -41,7 +42,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid duration' }, { status: 400 });
     }
 
-    // Validate price ID exists
     const priceId = TIME_PRODUCTS[duration as keyof typeof TIME_PRODUCTS].priceId;
     if (!priceId) {
       return NextResponse.json(
