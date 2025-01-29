@@ -5,15 +5,18 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-if (!process.env.STRIPE_SECRET_KEY) {
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+if (!stripeSecretKey) {
   throw new Error('STRIPE_SECRET_KEY is not defined');
 }
 
-if (!process.env.STRIPE_WEBHOOK_SECRET) {
+if (!webhookSecret) {
   throw new Error('STRIPE_WEBHOOK_SECRET is not defined');
 }
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+const stripe = new Stripe(stripeSecretKey, {
   apiVersion: '2025-01-27.acacia',
 });
 
@@ -38,7 +41,7 @@ export async function POST(request: NextRequest) {
     const event = stripe.webhooks.constructEvent(
       body,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET
+      webhookSecret // Using the validated webhook secret
     );
 
     if (event.type === 'checkout.session.completed') {
