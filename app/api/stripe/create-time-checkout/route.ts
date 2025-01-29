@@ -60,6 +60,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Verify the price exists in Stripe
+    try {
+      await stripe.prices.retrieve(priceId);
+    } catch (error) {
+      console.error('Error retrieving price from Stripe:', error);
+      return NextResponse.json(
+        { error: `Invalid price ID for ${duration} minutes` },
+        { status: 400 }
+      );
+    }
+
     // Log the checkout session parameters
     console.log('Creating checkout session with:', {
       mode: 'payment',
