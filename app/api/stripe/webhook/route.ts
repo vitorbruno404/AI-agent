@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
           customerId,
           remainingTime: timeInSeconds,
           expiresAt,
-          stripeSessionId: session.id,
+          sessionId: session.id,
         },
       });
 
