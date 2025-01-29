@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
+// Add this line temporarily to see the latest API version
+console.log('Latest Stripe API Version:', Stripe.LATEST_API_VERSION);
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16',
+  apiVersion: '2023-10-16', // We'll update this with the version we see in the console
 });
 
 const TIME_PRODUCTS = {
