@@ -1,4 +1,7 @@
 import { NextResponse } from 'next/server';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -9,20 +12,37 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Here you would:
-    // 1. Query your database for the customer's time purchase
-    // 2. Check if it's still valid
-    // 3. Calculate remaining time
-    
-    // This is a placeholder response
-    const remainingTime = 0; // Replace with actual DB query
-    const expiresAt = Date.now() + (remainingTime * 1000);
+    const activePurchase = await prisma.timePurchase.findFirst({
+      where: {
+        customerId,
+        expiresAt: {
+          gt: new Date(),
+        },
+        remainingTime: {
+          gt: 0,
+        },
+      },
+      orderBy: {
+        expiresAt: 'desc',
+      },
+    });
+
+    if (!activePurchase) {
+      return NextResponse.json({
+        remainingTime: 0,
+        expiresAt: Date.now(),
+      });
+    }
 
     return NextResponse.json({
-      remainingTime,
-      expiresAt
+      remainingTime: activePurchase.remainingTime,
+      expiresAt: activePurchase.expiresAt.getTime(),
     });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch time remaining' }, { status: 500 });
+    console.error('Error fetching time remaining:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch time remaining' },
+      { status: 500 }
+    );
   }
 } 

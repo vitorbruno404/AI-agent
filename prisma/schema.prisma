@@ -1,0 +1,18 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("postgresql://neondb_owner:npg_CADN27Gajwur@ep-muddy-unit-a9xgf3zz-pooler.gwc.azure.neon.tech/neondb?sslmode=require")
+}
+
+model TimePurchase {
+  id          String   @id @default(cuid())
+  customerId  String
+  duration    Int      // Duration in minutes
+  remainingTime Int    // Remaining time in seconds
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+} 
