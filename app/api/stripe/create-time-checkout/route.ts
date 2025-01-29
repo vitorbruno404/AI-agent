@@ -11,13 +11,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2025-01-27.acacia',
 });
 
-// Log available environment variables (without sensitive data)
-console.log('Environment variables check:', {
-  has_secret_key: !!process.env.STRIPE_SECRET_KEY,
-  has_10min_price: !!process.env.STRIPE_10MIN_PRICE_ID,
-  has_30min_price: !!process.env.STRIPE_30MIN_PRICE_ID,
-  has_60min_price: !!process.env.STRIPE_60MIN_PRICE_ID,
-  base_url: process.env.NEXT_PUBLIC_BASE_URL,
+// Log all environment variables (except secret key)
+console.log('Environment Variables Check:', {
+  STRIPE_10MIN_PRICE_ID: process.env.STRIPE_10MIN_PRICE_ID,
+  STRIPE_30MIN_PRICE_ID: process.env.STRIPE_30MIN_PRICE_ID,
+  STRIPE_60MIN_PRICE_ID: process.env.STRIPE_60MIN_PRICE_ID,
+  NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL
 });
 
 const TIME_PRODUCTS = {
@@ -50,10 +49,10 @@ export async function POST(request: NextRequest) {
     }
 
     const priceId = TIME_PRODUCTS[duration as keyof typeof TIME_PRODUCTS].priceId;
-    console.log('Selected price ID:', priceId);
-
+    console.log('Attempting to use price ID:', priceId);
+    
     if (!priceId) {
-      console.log('Price ID not found for duration:', duration);
+      console.log('Price ID is undefined for duration:', duration);
       return NextResponse.json(
         { error: `Price ID not configured for ${duration} minutes` },
         { status: 400 }
@@ -62,24 +61,26 @@ export async function POST(request: NextRequest) {
 
     // Verify the price exists in Stripe
     try {
-      await stripe.prices.retrieve(priceId);
+      console.log('Retrieving price from Stripe:', priceId);
+      const price = await stripe.prices.retrieve(priceId);
+      console.log('Price retrieved successfully:', {
+        id: price.id,
+        active: price.active,
+        currency: price.currency,
+        unit_amount: price.unit_amount
+      });
     } catch (error) {
       console.error('Error retrieving price from Stripe:', error);
       return NextResponse.json(
-        { error: `Invalid price ID for ${duration} minutes` },
+        { 
+          error: `Invalid price ID for ${duration} minutes`,
+          details: error instanceof Error ? error.message : 'Unknown error'
+        },
         { status: 400 }
       );
     }
 
-    // Log the checkout session parameters
-    console.log('Creating checkout session with:', {
-      mode: 'payment',
-      priceId,
-      customerId,
-      successUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/success`,
-      cancelUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/`,
-    });
-
+    console.log('Creating checkout session with price:', priceId);
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
@@ -97,24 +98,17 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    console.log('Checkout session created:', { sessionId: session.id });
+    console.log('Checkout session created successfully:', {
+      id: session.id,
+      url: session.url
+    });
 
     return NextResponse.json({ url: session.url });
   } catch (error) {
-    // Log the full error
-    console.error('Full error details:', error);
-
-    if (error instanceof Stripe.errors.StripeError) {
-      console.error('Stripe error:', {
-        type: error.type,
-        code: error.code,
-        message: error.message,
-      });
-    }
-
+    console.error('Stripe error:', error);
     return NextResponse.json(
       { 
-        error: 'Error creating checkout session',
+        error: 'Error creating checkout session', 
         details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
