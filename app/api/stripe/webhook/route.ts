@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { headers } from 'next/headers';
 import Stripe from 'stripe';
 import { PrismaClient } from '@prisma/client';
 
@@ -16,41 +17,64 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 });
 const prisma = new PrismaClient();
 
-export async function POST(request: Request) {
-  const payload = await request.text();
-  const sig = request.headers.get('stripe-signature');
+const DURATION_TO_SECONDS = {
+  10: 600,   // 10 minutes in seconds
+  30: 1800,  // 30 minutes in seconds
+  60: 3600   // 60 minutes in seconds
+};
 
-  if (!sig) {
+export async function POST(request: NextRequest) {
+  const body = await request.text();
+  const signature = headers().get('stripe-signature');
+
+  if (!signature) {
     return NextResponse.json(
-      { error: 'No stripe signature found' },
+      { error: 'Missing stripe-signature header' },
       { status: 400 }
     );
   }
 
-  // TypeScript will know STRIPE_WEBHOOK_SECRET is defined because of the check at startup
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
-
   try {
     const event = stripe.webhooks.constructEvent(
-      payload,
-      sig,
-      webhookSecret
+      body,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET
     );
 
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
+      
+      // Get customer ID and duration from the session
+      const customerId = session.customer as string;
       const duration = parseInt(session.metadata?.duration || '0');
       
-      if (duration && session.customer) {
-        await prisma.timePurchase.create({
-          data: {
-            customerId: session.customer.toString(),
-            duration,
-            remainingTime: duration * 60, // Convert minutes to seconds
-            expiresAt: new Date(Date.now() + duration * 60 * 1000), // Current time + duration
-          },
-        });
+      if (!duration || !DURATION_TO_SECONDS[duration as keyof typeof DURATION_TO_SECONDS]) {
+        console.error('Invalid duration:', duration);
+        return NextResponse.json(
+          { error: 'Invalid duration' },
+          { status: 400 }
+        );
       }
+
+      // Calculate time in seconds
+      const timeInSeconds = DURATION_TO_SECONDS[duration as keyof typeof DURATION_TO_SECONDS];
+      
+      // Set expiration date (30 days from now)
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 30);
+
+      // Create new time purchase record
+      await prisma.timePurchase.create({
+        data: {
+          customerId,
+          remainingTime: timeInSeconds,
+          expiresAt,
+          stripeSessionId: session.id,
+        },
+      });
+
+      console.log(`Added ${timeInSeconds} seconds for customer ${customerId}`);
+      return NextResponse.json({ received: true });
     }
 
     return NextResponse.json({ received: true });
@@ -61,4 +85,10 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
-} 
+}
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+}; 
