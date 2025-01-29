@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-01-27.acacia',
-});
+    apiVersion: '2024-09-30.acacia', // Automatically picks the latest supported version
+  });
 
 const TIME_PRODUCTS = {
   10: {
