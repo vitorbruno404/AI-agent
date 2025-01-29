@@ -5,21 +5,21 @@ import Stripe from 'stripe';
 console.log('Latest Stripe API Version:', Stripe.LATEST_API_VERSION);
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16', // We'll update this with the version we see in the console
+  apiVersion: '2024-01-01', // Try this newer version
 });
 
 const TIME_PRODUCTS = {
   10: {
     priceId: process.env.STRIPE_10MIN_PRICE_ID,
-    amount: 500, // $5.00
+    amount: 1500, // $15.00
   },
   30: {
     priceId: process.env.STRIPE_30MIN_PRICE_ID,
-    amount: 1200, // $12.00
+    amount: 2500, // $25.00
   },
   60: {
     priceId: process.env.STRIPE_60MIN_PRICE_ID,
-    amount: 2000, // $20.00
+    amount: 4500, // $45.00
   },
 };
 
