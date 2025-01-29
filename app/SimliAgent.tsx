@@ -4,16 +4,18 @@ import DailyIframe, { DailyCall } from "@daily-co/daily-js";
 import VideoBox from "@/app/Components/VideoBox";
 import cn from "./utils/TailwindMergeAndClsx";
 import IconSparkleLoader from "@/media/IconSparkleLoader";
+import { useSubscription } from "@/app/hooks/useSubscription";
 
 interface SimliAgentProps {
   onStart: () => void;
   onClose: () => void;
+  customerId: string | null;
 }
 
 // Get your Simli API key from https://app.simli.com/
 const SIMLI_API_KEY = process.env.NEXT_PUBLIC_SIMLI_API_KEY;
 
-const SimliAgent: React.FC<SimliAgentProps> = ({ onStart, onClose }) => {
+const SimliAgent: React.FC<SimliAgentProps> = ({ onStart, onClose, customerId }) => {
   // State management
   const [isLoading, setIsLoading] = useState(false);
   const [isAvatarVisible, setIsAvatarVisible] = useState(false);
@@ -22,6 +24,8 @@ const SimliAgent: React.FC<SimliAgentProps> = ({ onStart, onClose }) => {
   const [callObject, setCallObject] = useState<DailyCall | null>(null);
   const myCallObjRef = useRef<DailyCall | null>(null);
   const [chatbotId, setChatbotId] = useState<string | null>(null);
+
+  const { hasActiveSubscription } = useSubscription(customerId);
 
   /**
    * Create a new Simli room and join it using Daily
@@ -144,7 +148,7 @@ const SimliAgent: React.FC<SimliAgentProps> = ({ onStart, onClose }) => {
         {!isAvatarVisible ? (
           <button
             onClick={handleJoinRoom}
-            disabled={isLoading}
+            disabled={isLoading || !hasActiveSubscription || isLoading}
             className={cn(
               "w-full h-[52px] mt-4 disabled:bg-[#343434] disabled:text-white disabled:hover:rounded-[100px] bg-simliblue text-white py-3 px-6 rounded-[100px] transition-all duration-300 hover:text-black hover:bg-white hover:rounded-sm",
               "flex justify-center items-center"
@@ -152,6 +156,10 @@ const SimliAgent: React.FC<SimliAgentProps> = ({ onStart, onClose }) => {
           >
             {isLoading ? (
               <IconSparkleLoader className="h-[20px] animate-loader" />
+            ) : !hasActiveSubscription ? (
+              <span className="font-abc-repro-mono font-bold w-[164px]">
+                Subscribe to Start
+              </span>
             ) : (
               <span className="font-abc-repro-mono font-bold w-[164px]">
                 Start Interaction

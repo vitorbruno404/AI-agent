@@ -9,6 +9,7 @@ import GitHubLogo from "@/media/github-mark-white.svg";
 
 const Demo: React.FC = () => {
   const [showDottedFace, setShowDottedFace] = useState(true);
+  const [customerId, setCustomerId] = useState<string | null>(null);
 
   const onStart = () => {
     console.log("Setting setshowDottedface to false...");
@@ -42,6 +43,7 @@ const Demo: React.FC = () => {
           <SimliAgent
             onStart={onStart}
             onClose={onClose}
+            customerId={customerId}
           />
         </div>
       </div>
