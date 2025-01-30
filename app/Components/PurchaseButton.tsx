@@ -13,8 +13,6 @@ export default function PurchaseButton({ duration, price }: PurchaseButtonProps)
     try {
       setIsLoading(true);
       
-      console.log('Starting checkout process for duration:', duration);
-      
       const response = await fetch('/api/create-time-checkout', {
         method: 'POST',
         headers: {
@@ -31,10 +29,17 @@ export default function PurchaseButton({ duration, price }: PurchaseButtonProps)
         
         // Listen for messages from the success page
         window.addEventListener('message', function(event) {
+          // Make sure the message is from our success page
           if (event.data === 'checkout_complete') {
             // Close the checkout window
             checkoutWindow?.close();
-            // Optionally refresh the main page
+            
+            // Notify the parent website (vitorbruno.com)
+            if (window.parent !== window) {
+              window.parent.postMessage('ai_time_purchased', '*');
+            }
+            
+            // Refresh the AI agent interface
             window.location.reload();
           }
         });
