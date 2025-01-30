@@ -1,8 +1,8 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-export default function SuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
 
@@ -30,11 +30,24 @@ export default function SuccessPage() {
   }, [sessionId]);
 
   return (
+    <div className="text-center text-white">
+      <h1 className="text-2xl font-bold mb-4">Thank You!</h1>
+      <p className="mb-4">Payment successful! This window will close automatically.</p>
+    </div>
+  );
+}
+
+export default function SuccessPage() {
+  return (
     <div className="min-h-screen bg-black flex items-center justify-center">
-      <div className="text-center text-white">
-        <h1 className="text-2xl font-bold mb-4">Thank You!</h1>
-        <p className="mb-4">Payment successful! This window will close automatically.</p>
-      </div>
+      <Suspense fallback={
+        <div className="text-center text-white">
+          <h1 className="text-2xl font-bold mb-4">Processing...</h1>
+          <p className="mb-4">Please wait while we confirm your payment.</p>
+        </div>
+      }>
+        <SuccessContent />
+      </Suspense>
     </div>
   );
 } 
