@@ -22,7 +22,7 @@ const Demo: React.FC = () => {
   };
 
   return (
-    <div className="bg-black min-h-screen flex flex-col items-center font-abc-repro font-normal text-sm text-white p-8">
+    <div className="bg-black h-screen overflow-hidden flex flex-col items-center font-abc-repro font-normal text-sm text-white p-8">
       <SimliHeaderLogo />
       <Navbar />
 
@@ -34,10 +34,9 @@ const Demo: React.FC = () => {
           className="font-bold cursor-pointer mb-8 text-xl leading-8"
         >
           <Image className="w-[20px] inline mr-2" src={GitHubLogo} alt="" />
-          
         </text>
       </div>
-      <div className="flex flex-col items-center gap-6 bg-effect15White p-6 pb-[40px] rounded-xl w-full">
+      <div className="flex flex-col items-center gap-6 bg-effect15White p-6 pb-[40px] rounded-xl w-full max-h-full">
         <div>
           {showDottedFace && <DottedFace />}
           <SimliAgent
@@ -47,8 +46,6 @@ const Demo: React.FC = () => {
           />
         </div>
       </div>
-
-
     </div>
   );
 };
