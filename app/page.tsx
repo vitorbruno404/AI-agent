@@ -6,6 +6,7 @@ import SimliHeaderLogo from "./Components/Logo";
 import Navbar from "./Components/Navbar";
 import Image from "next/image";
 import GitHubLogo from "@/media/github-mark-white.svg";
+import Link from "next/link";
 
 const Demo: React.FC = () => {
   const [showDottedFace, setShowDottedFace] = useState(true);
@@ -22,29 +23,52 @@ const Demo: React.FC = () => {
   };
 
   return (
-    <div className="bg-black h-screen overflow-hidden flex flex-col items-center font-abc-repro font-normal text-sm text-white p-8">
-      <SimliHeaderLogo />
-      <Navbar />
-
-      <div className="absolute top-[32px] right-[32px]">
-        <text
-          onClick={() => {
-            window.open("https://github.com/");
-          }}
-          className="font-bold cursor-pointer mb-8 text-xl leading-8"
+    <div className="bg-black h-screen overflow-hidden flex flex-col items-center font-abc-repro font-normal text-sm text-white p-8 relative">
+      {/* Top Navigation Bar */}
+      <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-6">
+        <a 
+          href="https://vitorbruno.com" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="flex items-center space-x-2"
         >
-          <Image className="w-[20px] inline mr-2" src={GitHubLogo} alt="" />
-        </text>
-      </div>
-      <div className="flex flex-col items-center gap-6 bg-effect15White p-6 pb-[40px] rounded-xl w-full max-h-full">
-        <div>
-          {showDottedFace && <DottedFace />}
-          <SimliAgent
-            onStart={onStart}
-            onClose={onClose}
-            customerId={customerId}
+          <Image 
+            src="https://vitorbruno.com/wp-content/uploads/2023/07/Vitor-Bruno-Logo-blue.png"
+            alt="Vitor Bruno Logo"
+            width={150}
+            height={50}
+            className="hover:opacity-80 transition-opacity"
           />
+        </a>
+        
+        <a
+          href="https://github.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-bold cursor-pointer text-xl leading-8"
+        >
+          <Image className="w-[20px] inline mr-2" src={GitHubLogo} alt="GitHub" />
+        </a>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col items-center justify-center w-full">
+        <div className="flex flex-col items-center gap-6 bg-effect15White p-6 pb-[40px] rounded-xl w-full max-h-full">
+          <SimliHeaderLogo className="!top-[100px]" />
+          <div>
+            {showDottedFace && <DottedFace />}
+            <SimliAgent
+              onStart={onStart}
+              onClose={onClose}
+              customerId={customerId}
+            />
+          </div>
         </div>
+      </div>
+
+      {/* Footer Copyright */}
+      <div className="absolute bottom-4 text-white text-sm">
+        © {new Date().getFullYear()} VitorBruno.com - All rights reserved
       </div>
     </div>
   );
