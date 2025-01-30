@@ -23,7 +23,7 @@ const Demo: React.FC = () => {
   };
 
   return (
-    <div className="bg-black h-screen overflow-hidden flex flex-col items-center font-abc-repro font-normal text-sm text-white p-8 relative">
+    <div className="bg-black min-h-[100dvh] h-[100dvh] overflow-y-auto flex flex-col items-center font-abc-repro font-normal text-sm text-white p-8 relative">
       {/* Top Navigation Bar */}
       <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-6">
         <a 
