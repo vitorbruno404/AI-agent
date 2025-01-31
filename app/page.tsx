@@ -6,7 +6,6 @@ import SimliHeaderLogo from "./Components/Logo";
 import Navbar from "./Components/Navbar";
 import Image from "next/image";
 import GitHubLogo from "@/media/github-mark-white.svg";
-import Link from "next/link";
 
 const Demo: React.FC = () => {
   const [showDottedFace, setShowDottedFace] = useState(true);
@@ -23,7 +22,7 @@ const Demo: React.FC = () => {
   };
 
   return (
-    <div className="bg-black min-h-[100dvh] h-[100dvh] overflow-y-auto flex flex-col items-center font-abc-repro font-normal text-sm text-white p-8 relative">
+    <div className="bg-black h-screen overflow-hidden flex flex-col items-center font-abc-repro font-normal text-sm text-white p-8 relative">
       {/* Top Navigation Bar */}
       <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-6">
         <a 
@@ -52,8 +51,8 @@ const Demo: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center w-full">
-        <div className="flex flex-col items-center gap-6 bg-effect15White p-6 pb-[40px] rounded-xl w-full max-h-full">
+      <div className="flex-1 flex flex-col items-center justify-center w-full max-h-full">
+        <div className="flex flex-col items-center gap-6 bg-effect15White p-6 pb-[40px] rounded-xl w-full">
           <SimliHeaderLogo className="!top-[100px]" />
           <div>
             {showDottedFace && <DottedFace />}
