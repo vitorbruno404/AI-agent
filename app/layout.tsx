@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Vitor Bruno AI Agent",
-  description: "create-ai-agent",
+  description: "Vitor Bruno's Business Model Canvas AI Agent",
 };
 
 export default function RootLayout({
